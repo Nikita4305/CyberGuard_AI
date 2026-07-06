@@ -1,10 +1,9 @@
 import streamlit as st
-
 from agents.coordinator import CoordinatorAgent
-
+from agents.gemini_agent import GeminiSecurityAgent
 
 coordinator = CoordinatorAgent()
-
+gemini = GeminiSecurityAgent()
 
 st.set_page_config(
     page_title="CyberGuard AI",
@@ -13,16 +12,15 @@ st.set_page_config(
 )
 
 st.title("🛡️ CyberGuard AI")
-
-st.subheader(
+st.caption(
     "Multi-Agent Cybersecurity Incident Response Assistant"
 )
 
-st.markdown("---")
+st.divider()
 
 incident = st.text_area(
-    "Paste Security Incident",
-    height=200,
+    "Security Incident",
+    height=180,
     placeholder="""
 Examples:
 
@@ -33,33 +31,54 @@ paypal-security-verification-login.com
 Port scan detected from 192.168.1.55
 
 44d88612fea8a8f36de82e1278abb02f
-
-50000 requests per minute from multiple IP addresses
-
-200 files encrypted within 2 minutes
 """
 )
 
-if st.button("Analyze Incident"):
+analyze = st.button(
+    "🚨 Analyze Incident",
+    use_container_width=True
+)
+
+if analyze:
 
     if incident.strip():
 
         with st.spinner(
-            "CyberGuard AI is analyzing..."
+            "CyberGuard AI analyzing..."
         ):
 
             report = coordinator.analyze_incident(
                 incident
             )
 
+            ai_analysis = gemini.analyze(
+                incident
+            )
+
         st.success(
-            "Analysis completed successfully"
+            "Analysis completed"
         )
 
-        st.text(report)
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.subheader(
+                "📋 Multi-Agent Analysis"
+            )
+            st.code(
+                report,
+                language=None
+            )
+
+        with col2:
+            st.subheader(
+                "🤖 Gemini Security Analyst"
+            )
+            st.write(
+                ai_analysis
+            )
 
     else:
-
         st.error(
             "Please enter a security incident."
         )
