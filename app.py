@@ -1,9 +1,12 @@
 import streamlit as st
+
 from agents.coordinator import CoordinatorAgent
 from agents.gemini_agent import GeminiSecurityAgent
 
+
 coordinator = CoordinatorAgent()
 gemini = GeminiSecurityAgent()
+
 
 st.set_page_config(
     page_title="CyberGuard AI",
@@ -11,12 +14,14 @@ st.set_page_config(
     layout="wide"
 )
 
+
 st.title("🛡️ CyberGuard AI")
 st.caption(
     "Multi-Agent Cybersecurity Incident Response Assistant"
 )
 
 st.divider()
+
 
 incident = st.text_area(
     "Security Incident",
@@ -34,12 +39,11 @@ Port scan detected from 192.168.1.55
 """
 )
 
-analyze = st.button(
+
+if st.button(
     "🚨 Analyze Incident",
     use_container_width=True
-)
-
-if analyze:
+):
 
     if incident.strip():
 
@@ -47,38 +51,83 @@ if analyze:
             "CyberGuard AI analyzing..."
         ):
 
-            report = coordinator.analyze_incident(
-                incident
-            )
-
             ai_analysis = gemini.analyze(
                 incident
             )
+
+        attack = coordinator.log_agent.analyze(
+            incident
+        )
+
+        threat = coordinator.threat_agent.analyze(
+            attack["attack_type"]
+        )
+
+        risk = coordinator.risk_agent.assess(
+            threat["severity"]
+        )
+
+        actions = (
+            coordinator.response_agent.generate_response(
+                attack["attack_type"]
+            )
+        )
 
         st.success(
             "Analysis completed"
         )
 
-        col1, col2 = st.columns(2)
+        st.subheader(
+            "🚨 Incident Summary"
+        )
+
+        col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            st.subheader(
-                "📋 Multi-Agent Analysis"
-            )
-            st.code(
-                report,
-                language=None
+            st.metric(
+                "Attack Type",
+                attack["attack_type"]
             )
 
         with col2:
-            st.subheader(
-                "🤖 Gemini Security Analyst"
-            )
-            st.write(
-                ai_analysis
+            st.metric(
+                "Severity",
+                threat["severity"]
             )
 
+        with col3:
+            st.metric(
+                "Confidence",
+                f"{attack['confidence']}%"
+            )
+
+        with col4:
+            st.metric(
+                "Priority",
+                risk["priority"]
+            )
+
+        st.divider()
+
+        st.subheader(
+            "🛠 Recommended Actions"
+        )
+
+        for action in actions:
+            st.success(action)
+
+        st.divider()
+
+        st.subheader(
+            "🤖 Gemini Security Analysis"
+        )
+
+        st.write(
+            ai_analysis
+        )
+
     else:
+
         st.error(
             "Please enter a security incident."
         )
