@@ -40,12 +40,12 @@ Failed password for root from 203.0.113.10 port 22 ssh2
 paypal-security-verification-login.com
 
 Port scan detected from 192.168.1.55
-
 44d88612fea8a8f36de82e1278abb02f
 """
 )
 
 
+# Analyze button
 # Analyze button
 if st.button(
     "🚨 Analyze Incident",
@@ -54,15 +54,7 @@ if st.button(
 
     if incident.strip():
 
-        with st.spinner(
-            "CyberGuard AI analyzing..."
-        ):
-
-            ai_analysis = gemini.analyze(
-                incident
-            )
-
-        # Multi-agent analysis
+        # Multi-agent analysis first
         attack = coordinator.log_agent.analyze(
             incident
         )
@@ -80,6 +72,16 @@ if st.button(
                 attack["attack_type"]
             )
         )
+
+        # Gemini analysis using the same confidence score
+        with st.spinner(
+            "CyberGuard AI analyzing..."
+        ):
+
+            ai_analysis = gemini.analyze(
+                incident,
+                confidence=attack["confidence"]
+            )
 
         # Severity badge
         severity = threat["severity"]
