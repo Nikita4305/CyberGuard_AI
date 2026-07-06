@@ -2,12 +2,16 @@ import streamlit as st
 
 from agents.coordinator import CoordinatorAgent
 from agents.gemini_agent import GeminiSecurityAgent
+from mcp.threat_server import ThreatMCPServer
 
 
+# Initialize components
 coordinator = CoordinatorAgent()
 gemini = GeminiSecurityAgent()
+mcp_server = ThreatMCPServer()
 
 
+# Page configuration
 st.set_page_config(
     page_title="CyberGuard AI",
     page_icon="🛡️",
@@ -15,6 +19,7 @@ st.set_page_config(
 )
 
 
+# Header
 st.title("🛡️ CyberGuard AI")
 st.caption(
     "Multi-Agent Cybersecurity Incident Response Assistant"
@@ -23,6 +28,7 @@ st.caption(
 st.divider()
 
 
+# Input box
 incident = st.text_area(
     "Security Incident",
     height=180,
@@ -40,6 +46,7 @@ Port scan detected from 192.168.1.55
 )
 
 
+# Analyze button
 if st.button(
     "🚨 Analyze Incident",
     use_container_width=True
@@ -55,6 +62,7 @@ if st.button(
                 incident
             )
 
+        # Multi-agent analysis
         attack = coordinator.log_agent.analyze(
             incident
         )
@@ -73,10 +81,23 @@ if st.button(
             )
         )
 
+        # Severity badge
+        severity = threat["severity"]
+
+        if severity == "LOW":
+            severity_display = "🟢 LOW"
+        elif severity == "MEDIUM":
+            severity_display = "🟡 MEDIUM"
+        elif severity == "HIGH":
+            severity_display = "🟠 HIGH"
+        else:
+            severity_display = "🔴 CRITICAL"
+
         st.success(
             "Analysis completed"
         )
 
+        # Incident Summary
         st.subheader(
             "🚨 Incident Summary"
         )
@@ -92,7 +113,7 @@ if st.button(
         with col2:
             st.metric(
                 "Severity",
-                threat["severity"]
+                severity_display
             )
 
         with col3:
@@ -107,6 +128,58 @@ if st.button(
                 risk["priority"]
             )
 
+        # MCP Threat Intelligence
+        st.divider()
+
+        st.subheader(
+            "🌐 Threat Intelligence (MCP)"
+        )
+
+        indicator = "203.0.113.10"
+
+        intel = mcp_server.lookup(
+            indicator
+        )
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(
+                "Reputation",
+                intel["reputation"]
+            )
+
+        with col2:
+            st.metric(
+                "Confidence",
+                f"{intel['confidence']}%"
+            )
+
+        with col3:
+            st.metric(
+                "Category",
+                intel["category"]
+            )
+
+        # Attack Timeline
+        st.divider()
+
+        st.subheader(
+            "🕒 Attack Timeline"
+        )
+
+        timeline = [
+            "08:21:01 - Failed login detected",
+            "08:21:05 - Repeated login attempt",
+            "08:21:09 - Attack pattern identified",
+            "08:21:14 - Risk analysis completed",
+            "08:21:18 - Response generated"
+        ]
+
+        for event in timeline:
+            st.info(event)
+
+        # Recommended Actions
         st.divider()
 
         st.subheader(
@@ -116,6 +189,7 @@ if st.button(
         for action in actions:
             st.success(action)
 
+        # Gemini Analysis
         st.divider()
 
         st.subheader(
